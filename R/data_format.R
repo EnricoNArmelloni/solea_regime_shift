@@ -1,5 +1,5 @@
 # This script automatically fit ecological niche models on solemon data. The actual version performs feature selections based on maxent model. On the selected features are fitted a new max ent and a random forest models.
-setwd("C:/Users/e.armelloni/OneDrive/Lezioni/Lavoro/Solemon/Lavori/2024/regime_shift")
+setwd("C:/Users/e.armelloni/OneDrive/Lavoro/Solemon/github/solea_regime_shift")
 rm(list=ls())
 library(tidyverse)
 library(sf)
@@ -183,7 +183,7 @@ hauls_covariates=plyr::ldply(est_store)
 hauls_covariates=hauls_covariates%>%dplyr::select(-id,-x.id)    
 
 # paste solea data
-setwd("C:/Users/e.armelloni/OneDrive/Lezioni/Lavoro/Solemon/Lavori/2024/regime_shift")
+setwd("C:/Users/e.armelloni/OneDrive/Lavoro/Solemon/github/solea_regime_shift")
 library(readxl)
 rec.data=read_excel("data/station_index_below20cm.xlsx")
 rec.data$year=as.numeric(str_remove(str_remove(str_remove(str_remove(rec.data$Survey,'SOLEMON'),'_b'),'OTT'),'NOVEMBRE'))

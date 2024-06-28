@@ -1,4 +1,4 @@
-setwd("C:/Users/e.armelloni/OneDrive/Lezioni/Lavoro/Solemon/Lavori/2024/regime_shift")
+setwd("C:/Users/e.armelloni/OneDrive/Lavoro/Solemon/github/solea_regime_shift")
 rm(list=ls())
 library(tidyverse)
 library(sf)

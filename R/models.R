@@ -139,13 +139,14 @@ mod.res=function(x.formula){
     geom_point(aes(y=term, x=estimate))+
     geom_errorbar(aes(y=term, xmin=conf.low, xmax=conf.high))
   
-  xpreds=simulate(best.model, nsim = 999)
+  xpreds=simulate(x.model, nsim = 999)
   xdat$pred=apply(xpreds, 1, median)
   xdat$resid=(apply(xpreds, 1, median))-xdat$logrec
   plot(xdat$pred, xdat$logrec)
   abline(a=0,b=1)
 }
 
+xdat$logrec=log(xdat$Abun.rec+1)
 # endogenous variables
 names(xdat.model)
 xformula0=logrec ~ dept.tranf 

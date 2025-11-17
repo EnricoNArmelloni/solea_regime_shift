@@ -1,12 +1,5 @@
----
-editor_options: 
-  markdown: 
-    wrap: 72
-bibliography: references.bib
----
 
-Please send issues and questions to:
-[enrico.e.armelloni\@gmail.com](mailto:enrico.e.armelloni@gmail.com){.email}
+Please send issues and questions to: <enrico.e.armelloni@gmail.com>
 
 # Description
 
@@ -23,10 +16,10 @@ analysis.
 | Research Question | Dataset | Script | Analysis |
 |----|----|----|----|
 | Q1; Q2/M1; Q2/M2 | model_2d_input.csv | analysis_2d | Tipping point detection protocol: change point analysis; state driver plots, bimodality, linear model; threshold gam. |
-| Q2/M3 |  model_3d_input.csv | analysis_3d_model_pa; analysis_3d_model_pos | Spatial analysis: gamm, hotspot persistence |
+| Q2/M3 | model_3d_input.csv | analysis_3d_model_pa; analysis_3d_model_pos | Spatial analysis: gamm, hotspot persistence |
 
 Description of data, scripts and methodologies used to answers the
-research questions from Sguotti et al. (submitted). For details upon the
+research questions from Sguotti et al. (submitted). For details upon the
 research questions refer to the manuscript text.
 
 ## R scripts folder
@@ -40,16 +33,31 @@ the code. *supporting_functions.R* file contains custom functions that
 are used in the other scripts. *Appendix_S1.R* contains the code used
 for the simulation study described in Appendix_A
 
--   analysis_2d: code to replicate analysis based on 2d dataset and all
-    the figures showing results;
+- analysis_2d: code to replicate analysis based on 2d dataset and all
+  the figures showing results;
 
--   analysis_3d_model_pa; analysis_3d_model_pos: code to replicate
-    spatial analysis
+- analysis_3d_model_pa; analysis_3d_model_pos: code to replicate spatial
+  analysis
 
--   analysis_3d_plots: code to generate all the images showing results
-    of spatial analysis
+- analysis_3d_plots: code to generate all the images showing results of
+  spatial analysis
 
--   figure1: generates the subpanels of figure 1
+- figure1: generates the subpanels of figure 1
 
--   HighstatLibV11: code from [@zuur2017] containing functions to
-    perform data inspection.
+- HighstatLibV11: code from (Zuur, Ieno, and Saveliev 2017) containing
+  functions to perform data inspection.
+  
+# References
+
+<div id="refs" class="references csl-bib-body hanging-indent"
+entry-spacing="0">
+
+<div id="ref-zuur2017" class="csl-entry">
+
+Zuur, Alain F., Elena N. Ieno, and Anatoly A. Saveliev. 2017. “Spatial,
+Temporal and Spatial-Temporal Ecological Data Analysis with r-INLA.”
+*Highland Statistics Ltd* 1.
+
+</div>
+
+</div>

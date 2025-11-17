@@ -1,0 +1,657 @@
+---
+title: "Supporting Information for :
+
+From overexploited to overshoot: how spatial protections, fishing pressure reduction and environmental conditions sparked a positive tipping point in the Adriatic common sole
+"
+output: 
+  bookdown::pdf_document2:
+    toc: true
+    number_sections: false
+---
+
+\setcounter{table}{0}
+\setcounter{figure}{0}
+\renewcommand{\thetable}{A1.\arabic{table}}
+\renewcommand{\thefigure}{A1.\arabic{figure}}
+
+```{r setup, include=FALSE}
+rm(list=ls())
+scriptPath <- rstudioapi::getSourceEditorContext()$path 
+scriptDir <- dirname(scriptPath)
+base.dir=file.path(scriptDir, '..')
+knitr::opts_chunk$set(fig.width = 10, fig.height = 6)
+#########R flow to analyze Change Point and regime shifts in Solea Solea from Sguotti et al., ############
+#####open packages that we will use for the analyses 
+library(ggplot2)#plot
+library(dplyr)
+library(reshape2)
+library(tidyr)
+#library(bcp)#change point Bayesian Change Point Analysis 
+library(changepoint)#change point 
+# remotes::install_github("saskiaotto/INDperform")
+library(mgcv)#gam package
+library(INDperform)#tGAM package
+library(readxl)
+library(readr)
+library(tidyverse)
+library(patchwork)
+library(kableExtra)
+solea_tot=read.csv(file.path(base.dir,'data/model_2d_input.csv'))
+
+#my theme for plotting
+cami_theme <- function() {
+  theme(
+    plot.background = element_rect(fill = "white", colour = "white"),
+    panel.background = element_rect(fill = "white"),
+    axis.text = element_text(colour = "black", family = "Helvetica", size=8),
+    plot.title = element_text(colour = "black", face = "bold", size = 10, hjust = 0.5, family = "Helvetica"),
+    axis.title = element_text(colour = "black", face = "bold", size = 8, family = "Helvetica"),
+    #panel.grid.major.x = element_line(colour = "dodgerblue3"),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    strip.text = element_text(family = "Helvetica", colour = "white", size=12),
+    strip.background = element_rect(fill = "black"),
+    axis.ticks = element_line(colour = "black")
+  )
+}
+mod.tab=function(xmod){
+  mod.stat=summary(xmod)
+  rep.df=data.frame(mod.stat$coefficients)
+  rep.df$Rsq=mod.stat$r.squared
+  names(rep.df)=c('Estimate', 'St.Error', 't.value', 'p.value', 'Rsq')
+  rep.df=apply(rep.df, 2, function(x)round(x, digits=3))
+  return(rep.df)
+}
+
+```
+
+\newpage
+
+# Change Point Analysis
+
+## Total population
+
+```{r , include=T, echo=TRUE}
+## Total population
+cpt.mean(solea_tot$Abun_tot,Q=1,method="BinSeg")#location 6
+```
+
+```{r , include=T, echo=F, fig.cap='test'}
+p1 <-solea_tot[solea_tot$year < 2012,]
+mean1 <- mean(p1$Abun_tot)
+p2 <-solea_tot[solea_tot$year>= 2012,]
+mean2 <- mean(p2$Abun_tot)
+
+p <- ggplot()
+p <-p+geom_segment(aes(x = 2007, xend = 2012, y = 291, yend = 291), col="black")#create segment
+p <-p+geom_segment(aes(x = 2012, xend = 2019, y = 646, yend = 646), col="black")
+#p <- p+ geom_line(data = data_sol_y, aes(x =year2, y =new_w_sqkm ),color = "black",size=1)
+p <- p+ geom_point(data = solea_tot, aes(x =year, y =Abun_tot ),color = "#225ea8",size=1)
+p <- p+geom_smooth(data = solea_tot, aes(x =year, y =Abun_tot ),color = "#225ea8")
+p <-p+geom_vline(aes(xintercept =2012), col="black", linetype = "dashed")#vertical line
+p <- p+ ylab(expression("Population - density/km"^2))+xlab("Year")
+p <- p+ theme_bw()
+#p
+
+```
+
+## Juveniles
+
+```{r , include=T, echo=TRUE}
+## Juveniles
+cpt.mean(solea_tot$AbunRecruits, Q=1,method="BinSeg")#location4
+```
+
+```{r , include=T, echo=F}
+p1 <-solea_tot[solea_tot$year < 2010,]
+mean1 <- mean(p1$AbunRecruits)
+p2 <-solea_tot[solea_tot$year>= 2010,]
+mean2 <- mean(p2$AbunRecruits)
+
+p <- ggplot()
+p <-p+geom_segment(aes(x = 2007, xend = 2010, y = 124, yend = 124), col="black")#create segment
+p <-p+geom_segment(aes(x = 2010, xend = 2019, y = 263, yend = 263), col="black")
+p <- p+ geom_point(data = solea_tot, aes(x =year, y =AbunRecruits ),color = "seagreen3",size=1)
+p <- p+geom_smooth(data = solea_tot, aes(x =year, y =AbunRecruits ),color = "seagreen3")
+p <- p+ ylab(expression("Juveniles - density/km"^2))+xlab("Year")
+p <-p+geom_vline(aes(xintercept =2010), col="black", linetype = "dashed")#vertical line
+p <- p+ theme_bw()
+#p
+
+```
+
+## Adults
+
+```{r , include=T, echo=TRUE}
+## Adults
+cpt.mean(solea_tot$AbunAdults,Q=1,method="BinSeg")#location 7
+```
+
+```{r , include=T, echo=F}
+p1 <-solea_tot[solea_tot$year < 2013,]
+mean1 <- mean(p1$AbunAdults)
+p2 <-solea_tot[solea_tot$year>= 2013,]
+mean2 <- mean(p2$AbunAdults)
+
+p <- ggplot()
+p <-p+geom_segment(aes(x = 2007, xend = 2013, y = 159, yend = 159), col="black")#create segment
+p <-p+geom_segment(aes(x = 2013, xend = 2019, y = 390, yend = 390), col="black")
+#p <- p+ geom_line(data = data_sol_y, aes(x =year2, y =new_w_sqkm ),color = "black",size=1)
+p <- p+ geom_point(data = solea_tot, aes(x =year, y =AbunAdults ),color = "#41b6c4",size=1)
+p <- p+geom_smooth(data = solea_tot, aes(x =year, y =AbunAdults ),color = "#41b6c4")
+p <-p+geom_vline(aes(xintercept =2013), col="black", linetype = "dashed")#vertical line
+p <- p+ ylab(expression("Adults - density/km"^2))+xlab("Year")
+p <- p+ theme_bw()
+#p
+```
+
+\newpage
+
+# Bimodality
+
+```{r , include=T, echo=F, fig.cap='Bimodality of the response variables: a) total Common sole abundance, b) Adults abundance, c) Recruits abundance. Bimodality is given by the presence of two peaks.'}
+a <- ggplot(solea_tot, aes(x = Abun_tot))
+p1 <- a + geom_density(color = "#225ea8") +
+  geom_vline(aes(xintercept = mean(Abun_tot)), 
+             linetype = "dashed", linewidth = 0.6,color = "#225ea8")+
+  xlab("Total Sole (density/sqkm)")+ylab("Density")+
+  theme_bw()
+
+
+a <- ggplot(solea_tot, aes(x = AbunRecruits))
+p2 <- a + geom_density(col="seagreen3") +
+        geom_vline(aes(xintercept = mean(AbunRecruits)), 
+             linetype = "dashed", linewidth = 0.6,col="seagreen3")+
+  xlab("Recruits (thousands)")+ylab("Density")+
+  theme_bw()
+
+a <- ggplot(solea_tot, aes(x = AbunAdults))
+p3 <- a + geom_density(color = "#41b6c4") +
+  geom_vline(aes(xintercept = mean(AbunAdults)), 
+             linetype = "dashed", linewidth = 0.6,color = "#41b6c4")+
+  xlab("Adults (thousands)")+ylab("Density")+
+  theme_bw()
+ggpubr::ggarrange(p1,p2,p3, labels=c('a)','b)','c)'))
+```
+
+
+\newpage
+
+# Driver state plot
+
+
+```{r , include=T, echo=F, fig.cap='State-driver plots of recruits of Common sole in GSA 17. On the y-axis the state variable, Recruits abundance. On the x axis the a) Sea Bottom Temperature, b) Runoff of the river Po, c) Primary production. The colors refer to the periods before (blue) and after (red) the tipping point in 2012.'}
+## Juveniles
+solea_tot$cp_r <- NA
+solea_tot$cp_r[solea_tot$year<2010]<-1
+solea_tot$cp_r[solea_tot$year>=2010]<-2
+solea_tot$cp_r <- as.factor(solea_tot$cp_r)
+
+p <- ggplot()
+p <- p+geom_path(data = solea_tot, aes(x =bottom_t, y =AbunRecruits),col="seagreen3")
+p <- p+ geom_point(data = solea_tot, aes(x =bottom_t, y =AbunRecruits, col=cp_r),size=3)+scale_color_manual(values = c("#00AFBB",  "#FC4E07"))
+p <- p+xlab("Sea Bottom Temperature (°C)")+ylab("Recruits (thousands)")
+p <- p+theme_bw()
+p1 <-p + theme(legend.position = "none")
+
+p <- ggplot()
+p <- p+geom_path(data = solea_tot, aes(x =runoff_ms, y =AbunRecruits),col="seagreen3")
+p <- p+ geom_point(data = solea_tot, aes(x =runoff_ms, y =AbunRecruits, col=cp_r),size=3)+scale_color_manual(values = c("#00AFBB",  "#FC4E07"))
+p <- p+xlab("Runoff Po River")+ylab("Recruits (thousands)")
+p <- p+theme_bw()
+p2 <-p + theme(legend.position = "none")
+
+p <- ggplot()
+p <- p+geom_path(data = solea_tot, aes(x =PP, y =AbunRecruits),col="seagreen3")
+p <- p+ geom_point(data = solea_tot, aes(x =PP, y =AbunRecruits, col=cp_r),size=3)+scale_color_manual(values = c("#00AFBB",  "#FC4E07"))
+p <- p+xlab("Primary Production")+ylab("Recruits (thousands)")
+p <- p+theme_bw()
+p3 <-p + theme(legend.position = "none")
+ggpubr::ggarrange(p1,p2,p3, labels=c('a)','b)','c)'))
+```
+
+
+```{r , include=T, echo=F, fig.cap='State-driver plots of total Adults of Common sole in GSA 17. On the y-axis the state variable, adults abundance. On the x axis the a) Sea Bottom Temperature, b) Runoff of the river Po, c) Primary production, d) Effort and e) recruits. The colors refer to the periods before (blue) and after (red) the tipping point in 2012.'}
+
+##adults
+solea_tot$cp_A <- NA
+solea_tot$cp_A[solea_tot$year<2013]<-1
+solea_tot$cp_A[solea_tot$year>=2013]<-2
+
+solea_tot$cp_A <- as.factor(solea_tot$cp_A)
+
+p <- ggplot()
+p <- p+geom_path(data = solea_tot, aes(x =bottom_t, y =AbunAdults),col="#41b6c4")
+p <- p+ geom_point(data = solea_tot, aes(x =bottom_t, y =AbunAdults, col=cp_A),size=3)+scale_color_manual(values = c("#00AFBB",  "#FC4E07"))
+p <- p+xlab("Sea Bottom Temperature (°C)")+ylab("Adults (thousands)")
+p <- p+theme_bw()
+p1 <-p + theme(legend.position = "none")
+
+p <- ggplot()
+p <- p+geom_path(data = solea_tot, aes(x =runoff_ms, y =AbunAdults),col="#41b6c4")
+p <- p+ geom_point(data = solea_tot, aes(x =runoff_ms, y =AbunAdults, col=cp_A),size=3)+scale_color_manual(values = c("#00AFBB",  "#FC4E07"))
+p <- p+xlab("Runoff Po River")+ylab("Adults (thousands)")
+p <- p+theme_bw()
+p2 <-p + theme(legend.position = "none")
+
+
+
+p <- ggplot()
+p <- p+geom_path(data = solea_tot, aes(x =effort, y =AbunAdults),col="#41b6c4")
+p <- p+ geom_point(data = solea_tot, aes(x =effort, y =AbunAdults, col=cp_A),size=3)+scale_color_manual(values = c("#00AFBB",  "#FC4E07"))
+p <- p+xlab("Effort")+ylab("Adults (thousands)")
+p <- p+theme_bw()
+p3 <-p + theme(legend.position = "none")
+
+
+p <- ggplot()
+p <- p+geom_path(data = solea_tot, aes(x =PP, y =AbunAdults),col="#41b6c4")
+p <- p+ geom_point(data = solea_tot, aes(x =PP, y =AbunAdults, col=cp_A),size=3)+scale_color_manual(values = c("#00AFBB",  "#FC4E07"))
+p <- p+xlab("Primary Production")+ylab("Adults (thousands)")
+p <- p+theme_bw()
+p4 <-p + theme(legend.position = "none")
+
+
+p <- ggplot()
+p <- p+geom_path(data = solea_tot, aes(x =AbunRecruits, y =AbunAdults),col="#41b6c4")
+p <- p+ geom_point(data = solea_tot, aes(x =AbunRecruits, y =AbunAdults, col=cp_A),size=3)+scale_color_manual(values = c("#00AFBB",  "#FC4E07"))
+p <- p+xlab("Recruits (thousands t)")+ylab("Adults (thousands)")
+p <- p+theme_bw()
+p5 <-p + theme(legend.position = "none")
+
+ggpubr::ggarrange(p1,p2,p3,p4,p5, labels=c('a)','b)','c)','d)','e)'))
+```
+
+
+```{r , include=T, echo=F, fig.cap='State-driver plots of total population of Common sole in GSA 17. On the y-axis the state variable, sole abundance. On the x axis the a) Sea Bottom Temperature, b) Runoff of the river Po, c) Primary production and d) Effort. The color refer to the periods before (blue) and after (red) the tipping point in 2012.'}
+
+#tot
+solea_tot$cp_T <- NA
+solea_tot$cp_T[solea_tot$year<2012]<-1
+solea_tot$cp_T[solea_tot$year>=2012]<-2
+
+solea_tot$cp_T <- as.factor(solea_tot$cp_T)
+
+p <- ggplot()
+p <- p+geom_path(data = solea_tot, aes(x =bottom_t, y =Abun_tot),col="#225ea8")
+p <- p+ geom_point(data = solea_tot, aes(x =bottom_t, y =Abun_tot, col=cp_T),size=3)+scale_color_manual(values = c("#00AFBB",  "#FC4E07"))
+p <- p+xlab("Sea Bottom Temperature (°C)")+ylab("Total Sole (density/sqkm)")
+p <- p+theme_bw()
+p1 <-p + theme(legend.position = "none")
+
+
+p <- ggplot()
+p <- p+geom_path(data = solea_tot, aes(x =runoff_ms, y =Abun_tot),col="#225ea8")
+p <- p+ geom_point(data = solea_tot, aes(x =runoff_ms, y =Abun_tot, col=cp_T),size=3)+scale_color_manual(values = c("#00AFBB",  "#FC4E07"))
+p <- p+xlab("Runoff Po River")+ylab("Total Sole (density/sqkm)")
+p <- p+theme_bw()
+p2 <-p + theme(legend.position = "none")
+
+
+
+p <- ggplot()
+p <- p+geom_path(data = solea_tot, aes(x =effort, y =Abun_tot),col="#225ea8")
+p <- p+ geom_point(data = solea_tot, aes(x =effort, y =Abun_tot, col=cp_T),size=3)+scale_color_manual(values = c("#00AFBB",  "#FC4E07"))
+p <- p+xlab("Effort")+ylab("Total Sole (density/sqkm)")
+p <- p+theme_bw()
+p3 <-p + theme(legend.position = "none")
+
+
+
+p <- ggplot()
+p <- p+geom_path(data = solea_tot, aes(x =PP, y =Abun_tot),col="#225ea8")
+p <- p+ geom_point(data = solea_tot, aes(x =PP, y =Abun_tot, col=cp_T),size=3)+scale_color_manual(values = c("#00AFBB",  "#FC4E07"))
+p <- p+xlab("Primary Production")+ylab("Total Sole (density/sqkm)")
+p <- p+theme_bw()
+p4 <-p + theme(legend.position = "none")
+
+ggpubr::ggarrange(p1,p2,p3,p4, labels=c('a)','b)','c)','d)'))
+
+```
+
+\newpage
+
+# Linear models
+
+Here goes this trial
+
+```{r , include=T, echo=F}
+m1 <- lm(Abun_tot ~ bottom_t, data=solea_tot)
+m2 <- lm(AbunAdults ~ bottom_t, data=solea_tot)
+m3<- lm(AbunRecruits ~ bottom_t, data=solea_tot)
+m4<- lm(AbunRecruits ~ runoff_ms, data=solea_tot)
+m5 <- lm(AbunRecruits ~PP, data=solea_tot)
+solea_tot$Adult_lag=lead(solea_tot$AbunRecruits)
+m6 <- lm(AbunRecruits ~Adult_lag, data=solea_tot)
+#plot(m1)
+```
+
+```{r , include=T, echo=F}
+kableExtra::kable(mod.tab(m1), caption = 'Model results of linear model with Sea Bottom Temperature. The results of the model using as response variable the total population of Common Sole and as explanatory variable Sea Bottom temperature', latex_options='hold_position')
+```
+
+```{r , include=T, echo=F}
+kableExtra::kable(mod.tab(m2), caption = 'Model results of linear model with Sea Bottom Temperature. The results of the model using as response variable the Adult population of Common Sole and as explanatory variable Sea Bottom temperature', latex_options='hold_position')
+```
+
+```{r , include=T, echo=F}
+kableExtra::kable(mod.tab(m3), caption = 'Model results of linear model for recruits. The results of the model using as response variable the juvenile population of Common Sole and as explanatory variable Sea Bottom temperature.', latex_options='hold_position')
+```
+
+```{r , include=T, echo=F}
+kableExtra::kable(mod.tab(m4), caption = 'Model results of linear model for recruits. The results of the model using as response variable the juvenile population of Common Sole and as explanatory variable po river.', latex_options='hold_position')
+```
+
+```{r , include=T, echo=F}
+kableExtra::kable(mod.tab(m5), caption = 'Model results of linear model for recruits. The results of the model using as response variable the juvenile population of Common Sole and as explanatory variable primary production.', latex_options='hold_position')
+```
+
+```{r , include=T, echo=F}
+kableExtra::kable(mod.tab(m6), caption = 'Model results of linear model for recruits. The results of the model using as response variable the juvenile population of Common Sole and as explanatory variable the Adults observed in the previous year.', latex_options='hold_position')
+```
+
+
+\newpage
+
+# Threshold gam
+
+## Total population
+
+```{r , include=T, echo=F}
+y <- solea_tot$Abun_tot
+x <- solea_tot$runoff_ms
+x2 <- solea_tot$effort
+time <- solea_tot$year
+```
+
+
+```{r , include=T, echo=F, message=FALSE, warning=FALSE}
+
+mod <- gam(y ~ s(x,k=3)) 
+tmod <- thresh_gam(model = mod, ind_vec = y, press_vec = x, t_var = x2, name_t_var = "x2",
+                   k = 4, a = 0.2, b = 0.8)                             
+#test_interaction
+#loocv_thresh_gam(model = mod, ind_vec = y, press_vec = x, t_var = x2, name_t_var = "x2",
+#                 k = 4, a = 0.2, b = 0.8,time =  time ) #[1] FALSE
+#summary(tmod)
+
+```
+
+
+```{r , include=T, echo=F}
+#tmod$mr # 9.789377
+xmod=summary(tmod)
+cat('Formula is:')
+print(xmod$formula)
+
+tab.up=data.frame(Estimate= xmod$p.coeff)
+rownames(tab.up)='Intercept'
+tab.up$Sterr= xmod$se[1]
+tab.up$tval= xmod$p.t
+tab.up$pval=xmod$p.pv
+tab.up=apply(tab.up, 2, function(x)round(x, digits=3))
+names(tab.up)=c('Estimate', 'St.Error', 't.value', 'p.value')
+
+tab.lo=data.frame(xmod[["s.table"]])[,2:4]
+tab.lo$Rsq=xmod$r.sq
+tab.lo$Dev=xmod$dev.expl
+rownames(tab.lo)=c('< threshold', '> threshold')
+names(tab.lo)=c('D.f.', 'St.Error', 'p.value', 'Rsq', 'Dev.Expl')
+tab.lo=apply(tab.lo, 2, function(x)round(x, digits=3))
+
+kableExtra::kable(tab.up, caption = 'Model results threshold gam for the total Common sole population. The model was built using as threshold driver effort and as the other explanatory variable the runoff of river Po.')
+
+kableExtra::kable(tab.lo, caption = 'Model results threshold gam for the total Common sole population before and after the threshold.')
+```
+
+
+```{r , include=T, echo=F, fig.cap='diagnostics of the threshold gam', message=FALSE, warning=FALSE}
+tmod$train_na <- "NA"
+tmod$train_na <- rep(FALSE, times = 56) 
+
+plot_diagnostics(tmod)$all_plots
+
+solea_tot$CP_E <- ifelse(solea_tot$effort>=tmod$mr, 1, 2)
+solea_max <- solea_tot[solea_tot$CP_E == 1,]
+solea_min <- solea_tot[solea_tot$CP_E ==2,]
+solea_tot$col <- ifelse(solea_tot$CP_E==1, "#00AFBB",  "#FC4E07")
+
+p <- ggplot(data = solea_tot, aes(x = runoff_ms, y = Abun_tot)) + 
+  geom_point(color=solea_tot$col) +
+  geom_smooth(data=solea_max,aes(x = runoff_ms, y = Abun_tot), method = "lm", se = TRUE, col="#00AFBB")+
+  geom_smooth(data=solea_min,aes(x = runoff_ms, y = Abun_tot),method = "lm", se = TRUE, col="#FC4E07")+
+  ylab(expression("Population - density/km"^2))+xlab("Runoff Po River")+
+  theme_bw()
+#p
+```
+
+
+
+## Adults
+
+```{r , include=T, echo=F}
+solea_tot$abunA_lag <- c(NA,solea_tot$AbunAdults[1:12] )
+solea_tot2 <- solea_tot[!is.na(solea_tot$abunA_lag),]
+
+y <- solea_tot2$abunA_lag
+
+x <- solea_tot2$runoff_ms
+
+x2 <- solea_tot2$AbunRecruits
+
+time <- solea_tot2$year
+
+mod <- gam(y ~ s(x,k=3)) 
+
+tmod <- thresh_gam(model = mod, ind_vec = y, press_vec = x, t_var = x2, name_t_var = "x2",
+                   k = 4, a = 0.2, b = 0.8)   
+
+```
+
+
+```{r , include=T, echo=F}
+#tmod$mr # 9.789377
+xmod=summary(tmod)
+cat('Formula is:')
+print(xmod$formula)
+
+tab.up=data.frame(Estimate= xmod$p.coeff)
+rownames(tab.up)='Intercept'
+tab.up$Sterr= xmod$se[1]
+tab.up$tval= xmod$p.t
+tab.up$pval=xmod$p.pv
+tab.up=apply(tab.up, 1, function(x)round(x, digits=3))
+names(tab.up)=c('Estimate', 'St.Error', 't.value', 'p.value')
+
+tab.lo=data.frame(xmod[["s.table"]])[,2:4]
+tab.lo$Rsq=xmod$r.sq
+tab.lo$Dev=xmod$dev.expl
+rownames(tab.lo)=c('< threshold', '> threshold')
+names(tab.lo)=c('D.f.', 'St.Error', 'p.value', 'Rsq', 'Dev.Expl')
+tab.lo=apply(tab.lo, 2, function(x)round(x, digits=3))
+
+kableExtra::kable(tab.up, caption = 'Model results threshold gam for Adults built using as threshold driver reruits and as the other explanatory variable the runoff of river Po.')
+
+kableExtra::kable(tab.lo, caption = 'Model results threshold gam for Adults built using as threshold driver reruits and as the other explanatory variable the runoff of river Po. Model results are shown for the two parts of the model (before and after the threshold).')
+```
+
+```{r , include=T, echo=F}
+#test_interaction
+#loocv_thresh_gam(model = mod, ind_vec = y, press_vec = x, t_var = x2, name_t_var = "x2",
+#                 k = 4, a = 0.2, b = 0.8,time =  time ) #[1] FALSE
+
+#summary(tmod)
+
+#tmod$mr # 9.789377
+
+tmod$train_na <- "NA"
+tmod$train_na <- rep(FALSE, times = 56) 
+
+plot_diagnostics(tmod)$all_plots
+
+solea_tot$CP_REC <-ifelse(solea_tot$AbunRecruits <240.3324, 1, 2)
+solea_tot$col <- ifelse(solea_tot$CP_REC== 1, "#00AFBB",  "#FC4E07")
+solea_min <- solea_tot[solea_tot$CP_REC == 1,]
+solea_max<- solea_tot[solea_tot$CP_REC ==2,]
+
+p <- ggplot(data = solea_tot, aes(x = runoff_ms, y = AbunAdults)) + 
+  geom_point(color=solea_tot$col) +
+  geom_smooth(data=solea_max,aes(x = runoff_ms, y = AbunAdults), method = "lm",se = T, col="#FC4E07")+
+  geom_smooth(data=solea_min,aes(x = runoff_ms, y = AbunAdults), method = "lm", se = T, col="#00AFBB")+
+  ylab(expression("Adults - density/km"^2))+xlab("Runoff Po River")+
+  theme_bw()
+#p
+p4c=p
+
+y <- solea_tot$AbunAdults
+
+x <- solea_tot$runoff_ms
+
+x2 <- solea_tot$effort
+
+time <- solea_tot$year
+
+mod <- gam(y ~ s(x,k=3)) 
+
+tmod <- thresh_gam(model = mod, ind_vec = y, press_vec = x, t_var = x2, name_t_var = "x2",
+                   k = 4, a = 0.2, b = 0.8)   
+```
+
+\newpage
+
+## Adults and soon
+
+```{r , include=T, echo=F}
+#tmod$mr # 9.789377
+xmod=summary(tmod)
+cat('Formula is:')
+print(xmod$formula)
+
+tab.up=data.frame(Estimate= xmod$p.coeff)
+rownames(tab.up)='Intercept'
+tab.up$Sterr= xmod$se[1]
+tab.up$tval= xmod$p.t
+tab.up$pval=xmod$p.pv
+tab.up=apply(tab.up, 1, function(x)round(x, digits=3))
+names(tab.up)=c('Estimate', 'St.Error', 't.value', 'p.value')
+
+tab.lo=data.frame(xmod[["s.table"]])[,2:4]
+tab.lo$Rsq=xmod$r.sq
+tab.lo$Dev=xmod$dev.expl
+rownames(tab.lo)=c('< threshold', '> threshold')
+names(tab.lo)=c('D.f.', 'St.Error', 'p.value', 'Rsq', 'Dev.Expl')
+tab.lo=apply(tab.lo, 2, function(x)round(x, digits=3))
+
+kableExtra::kable(tab.up, caption = 'Model results threshold gam for Adults built using as threshold driver reruits and as the other explanatory variable the runoff of river Po.')
+
+kableExtra::kable(tab.lo, caption = 'Model results threshold gam for Adults built using as threshold driver reruits and as the other explanatory variable the runoff of river Po. Model results are shown for the two parts of the model (before and after the threshold).')
+```
+
+```{r , include=T, echo=F}
+#test_interaction
+#loocv_thresh_gam(model = mod, ind_vec = y, press_vec = x, t_var = x2, name_t_var = "x2",
+#                 k = 4, a = 0.2, b = 0.8,time =  time ) #[1] FALSE
+
+#summary(tmod)
+
+#tmod$mr # 9.789377
+
+tmod$train_na <- "NA"
+tmod$train_na <- rep(FALSE, times = 56) 
+
+plot_diagnostics(tmod)$all_plots
+
+
+
+solea_tot$CP_EFF_A <-ifelse(solea_tot$effort <tmod$mr, 2, 1)
+solea_tot$col <- ifelse(solea_tot$CP_EFF_A== 1, "#00AFBB",  "#FC4E07")
+solea_min <- solea_tot2[solea_tot$CP_EFF_A == 1,]
+solea_max<- solea_tot2[solea_tot$CP_EFF_A ==2,]
+
+p <- ggplot(data = solea_tot, aes(x = runoff_ms, y = AbunAdults)) + 
+  geom_point(color=solea_tot$col) +
+  geom_smooth(data=solea_max,aes(x = runoff_ms, y = AbunAdults), method = "lm", se = T, col="#FC4E07")+
+  geom_smooth(data=solea_min,aes(x = runoff_ms, y = AbunAdults), method = "lm", se = T, col="#00AFBB")+
+  ylab(expression("Adults - density/km"^2))+xlab("Runoff Po River")+
+  theme_bw()
+#p
+p4b=p
+
+y <- solea_tot$AbunRecruits
+
+x <- solea_tot$PP
+
+x2 <- solea_tot$bottom_t
+
+time <- solea_tot$year
+
+mod <- gam(y ~ s(x,k=3)) 
+
+tmod <- thresh_gam(model = mod, ind_vec = y, press_vec = x, t_var = x2, name_t_var = "x2",
+                   k = 4, a = 0.2, b = 0.8)   
+
+```
+
+\newpage
+
+## Adults and so
+
+```{r , include=T, echo=F}
+#tmod$mr # 9.789377
+xmod=summary(tmod)
+cat('Formula is:')
+print(xmod$formula)
+
+tab.up=data.frame(Estimate= xmod$p.coeff)
+rownames(tab.up)='Intercept'
+tab.up$Sterr= xmod$se[1]
+tab.up$tval= xmod$p.t
+tab.up$pval=xmod$p.pv
+tab.up=apply(tab.up, 1, function(x)round(x, digits=3))
+names(tab.up)=c('Estimate', 'St.Error', 't.value', 'p.value')
+
+tab.lo=data.frame(xmod[["s.table"]])[,2:4]
+tab.lo$Rsq=xmod$r.sq
+tab.lo$Dev=xmod$dev.expl
+rownames(tab.lo)=c('< threshold', '> threshold')
+names(tab.lo)=c('D.f.', 'St.Error', 'p.value', 'Rsq', 'Dev.Expl')
+tab.lo=apply(tab.lo, 2, function(x)round(x, digits=3))
+
+kableExtra::kable(tab.up, caption = 'Model results threshold gam for Adults built using as threshold driver reruits and as the other explanatory variable the runoff of river Po.')
+
+kableExtra::kable(tab.lo, caption = 'Model results threshold gam for Adults built using as threshold driver reruits and as the other explanatory variable the runoff of river Po. Model results are shown for the two parts of the model (before and after the threshold).')
+```
+
+```{r , include=T, echo=F}
+#test_interaction
+#loocv_thresh_gam(model = mod, ind_vec = y, press_vec = x, t_var = x2, name_t_var = "x2",
+#                 k = 4, a = 0.2, b = 0.8,time =  time ) #[1] FALSE
+
+#summary(tmod)
+
+#tmod$mr # 9.789377
+
+tmod$train_na <- "NA"
+tmod$train_na <- rep(FALSE, times = 56) 
+
+plot_diagnostics(tmod)$all_plots
+
+
+
+solea_tot$CP_EFF_A <-ifelse(solea_tot$effort <33735839, 2, 1)
+solea_tot$col <- ifelse(solea_tot$CP_EFF_A== 1, "#00AFBB",  "#FC4E07")
+solea_min <- solea_tot2[solea_tot$CP_EFF_A == 1,]
+solea_max<- solea_tot2[solea_tot$CP_EFF_A ==2,]
+
+p <- ggplot(data = solea_tot, aes(x = runoff_ms, y = AbunAdults)) + 
+  geom_point(color=solea_tot$col) +
+  geom_smooth(data=solea_max,aes(x = runoff_ms, y = AbunAdults), method = "lm", se = FALSE, col="#FC4E07")+
+  geom_smooth(data=solea_min,aes(x = runoff_ms, y = AbunAdults), method = "lm", se = FALSE, col="#00AFBB")+
+  ylab("Adults (thousands)")+xlab("Runoff Po River")+
+  theme_bw()
+#p
+
+```
+
+

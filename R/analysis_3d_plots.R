@@ -4,7 +4,7 @@ scriptDir <- dirname(scriptPath)
 setwd(file.path(scriptDir, '..'))
 library(tidyverse)
 library(sf)
-library(sdmTMB)
+library(sdmTMB) # ‘0.6.0’
 library(spdep)
 library(visreg)
 
@@ -16,12 +16,6 @@ mod.res=list.files('results', pattern='.csv')
 # p/a
 pa.mod=mod.res[grep('pa', mod.res)]
 xres=NULL
-
-for(i in 1:length(pa.mod)){
-  rbind(xres,)
-  read.csv(file.path('results', pa.mod[i]))
-}
-
 
 pa.model= readRDS("results/analysis_3d/pa_model.RDS")
 pa.tv.model= readRDS("results/analysis_3d/pa_tv_model.RDS")
@@ -449,12 +443,13 @@ ggsave(plot=p5, 'results/analysis_3d/plots/residuals_tv.png', width=15, height=1
 caret::confusionMatrix(table(x.dat.m$pred, x.dat.m$pa))
 
 # spatial preds ####
-solemon.area=read_sf('C:/Users/e.armelloni/OneDrive/Lezioni/Lavoro/Solemon/Data/shapefiles/Solemon_strata_ITA_SVN_depth')%>%
+#solemon.area=read_sf('C:/Users/e.armelloni/OneDrive/Lezioni/Lavoro/Solemon/Data/shapefiles/Solemon_strata_ITA_SVN_depth')%>%
+solemon.area=read_sf('../other_data/Solemon_strata_ITA_SVN_depth')%>%
   st_union()%>%
   st_set_crs(4326)%>%
   st_transform(3003)
 
-basegrid <- readRDS("C:/Users/e.armelloni/OneDrive/Lavoro/Solemon/github/solea_regime_shift/data/basegrid.RDS")
+basegrid <- readRDS("data/basegrid.RDS")
 basegrid$depth=-basegrid$depth
 basegrid$dep=(basegrid$depth-mean(xdat$meandepth))/sd(xdat$meandepth)
 basegrid$sal.fal=(basegrid$sal_autumn-mean(xdat$sal_autumn))/sd(xdat$sal_autumn)
@@ -463,10 +458,11 @@ basegrid$fyear=as.factor(basegrid$year)
 basegrid$ppr.sum=(basegrid$pp_summer-mean(xdat$pp_summer))/sd(xdat$pp_summer)
 basegrid$sal.sum=(basegrid$sal_summer-mean(xdat$sal_summer))/sd(xdat$sal_summer)
 
-med=read_sf("C:/Users/e.armelloni/OneDrive/Lezioni/Lavoro/BigData/contours/Med_Poly")%>%
+#med=read_sf("C:/Users/e.armelloni/OneDrive/Lezioni/Lavoro/BigData/contours/Med_Poly")%>%
+med=read_sf("../other_data/Med_Poly")%>%
   st_set_crs(4326)%>%
   st_transform(., 3003)%>%
-  st_crop(.,basegrid)
+  st_crop(.,st_buffer(basegrid))
 
 coords.grid=as.data.frame(st_coordinates(st_centroid(basegrid)))
 
@@ -531,7 +527,7 @@ ggsave(plot=p.persistence, 'plots/persistence.jpeg', width = 10, height = 10, un
 
 
 # spatial preds tv ####
-solemon.area=read_sf('C:/Users/e.armelloni/OneDrive/Lezioni/Lavoro/Solemon/Data/shapefiles/Solemon_strata_ITA_SVN_depth')%>%
+solemon.area=read_sf('../other_data/Solemon_strata_ITA_SVN_depth')%>%
   st_union()%>%
   st_set_crs(4326)%>%
   st_transform(3003)
@@ -544,11 +540,6 @@ basegrid$tem.fal=(basegrid$bottomT_autumn-mean(xdat$bottomT_autumn))/sd(xdat$bot
 basegrid$fyear=as.factor(basegrid$year)
 basegrid$ppr.sum=(basegrid$pp_summer-mean(xdat$pp_summer))/sd(xdat$pp_summer)
 basegrid$sal.sum=(basegrid$sal_summer-mean(xdat$sal_summer))/sd(xdat$sal_summer)
-
-med=read_sf("C:/Users/e.armelloni/OneDrive/Lezioni/Lavoro/BigData/contours/Med_Poly")%>%
-  st_set_crs(4326)%>%
-  st_transform(., 3003)%>%
-  st_crop(.,basegrid)
 
 coords.grid=as.data.frame(st_coordinates(st_centroid(basegrid)))
 
@@ -695,10 +686,6 @@ pt2=ggplot(data=t2)+
 
 ggpubr::ggarrange(pt1, pt2)
 
-
-
-
-
 ### hot spot
 library(spdep)
 hslist=list()
@@ -743,50 +730,77 @@ hsresult=data.frame(hslist)%>%dplyr::select(FID, year)%>%
 hsresultp1=na.omit(hsresult)
 
 
-hsresultcomb=hsresultp2%>%full_join(hsresultp1)%>%
-  replace(is.na(.),0)%>%left_join(basegrid)%>%st_as_sf()
+hsresultcomb=left_join(basegrid,hsresultp2)%>%
+  full_join(hsresultp1)%>%
+  replace(is.na(.),0)%>%st_as_sf()
 hsresultcomb$diff=hsresultcomb$hs_cat_p2-hsresultcomb$hs_cat_p1
 
 library(rnaturalearth)
 library(sf)
 library(ggspatial)
-xcountry=ne_countries(country = c("italy"), scale = "medium")%>%
+xcountry=ne_countries(country = c("italy", 'croatia', 'slovenia', 'bosnia'), scale = "medium")%>%
   st_as_sf%>%
   st_set_crs(4326)%>%
   st_transform(3003)
 
+med=read_sf("../other_data/Med_Poly")%>%
+  st_set_crs(4326)%>%
+  st_transform(., 3003)%>%
+  st_crop(.,st_buffer(basegrid, 20000))
 
 
 pl.map=ggplot()+
-  annotation_map_tile() +
-  geom_sf(data=solemon.area, fill='seashell', alpha=0.4)+
+  geom_sf(data=med, fill='gray50')+
+  geom_sf(data=solemon.area, fill='white', alpha=0.4)+
   annotation_scale() +
   labs(fill='Hot Spot category')+
+  #theme_bw()+
+  theme(panel.background = element_rect(fill='white'))+
   scale_fill_viridis_d()+
   #geom_sf(data=med)+
-  theme(legend.position = 'bottom')
+  theme(legend.position = 'bottom');pl.map
+
+mycols=viridis(11)
+mycols <- c(
+  "#000000", # black
+  "#E69F00", # orange
+  "#56B4E9", # sky blue
+  "#009E73", # bluish green
+  "#F0E442", # yellow
+  "white", # blue
+  "#D55E00", # vermillion
+  "#CC79A7", # reddish purple
+  "#999999", # grey
+  "#66C2A5", # teal-ish
+  "#FC8D62"  # coral
+)
+names(mycols)=as.character(-5:5)
+
+pr2=pl.map+geom_sf(data=hsresultcomb, color=NA,
+                   aes(fill=factor(hs_cat_p2)))+
+  scale_fill_manual(values = mycols);pr2
 
 
-pr2=pl.map+geom_sf(data=hsresultcomb[hsresultcomb$hs_cat_p2>0,], color=NA,
-                   aes(fill=factor(hs_cat_p2)));pr2
 
+pr1=pl.map+geom_sf(data=hsresultcomb, color=NA,
+                   aes(fill=factor(hs_cat_p1)))+
+  scale_fill_manual(values = mycols);pr1
 
-
-pr1=pl.map+geom_sf(data=hsresultcomb[hsresultcomb$hs_cat_p1>0,], color=NA,
-                   aes(fill=factor(hs_cat_p1)));pr1
-
+hsresultcomb$diffbin=ifelse(hsresultcomb$diff>0,1,
+                            ifelse(hsresultcomb$diff<0,-1,0))
 pr3=pl.map+
-  geom_sf(data=solemon.area, fill='black', alpha=0.4)+
+  #geom_sf(data=solemon.area, fill='black', alpha=0.4)+
   geom_sf(data=hsresultcomb, color=NA,
-          aes(fill=diff))+
-  scale_fill_gradient2(low = "red", mid = "white", high = "darkgreen", midpoint = 0)+
-  labs(fill='Hotspot difference R2-R1');pr3
+          aes(fill=as.factor(diff)))+
+  scale_fill_manual(values = mycols)+
+  #scale_fill_gradient2(low = "#440154FF", mid = "#21908CFF", high = "#FDE725FF", midpoint = 0)+
+  labs(fill='Hotspot category changes');pr3
 
-pr4=ggpubr::ggarrange(pr1,pr2, pr3, nrow=1, labels=c('a) R1: 2007-2012', 'b) R2: 2019-2019', 'c) R2 - R1'))
+pr4=ggpubr::ggarrange(pr3,pr1,pr2,  nrow=1, common.legend = T);pr4
 
 ggsave(plot=pr4, 'results/analysis_3d/plots/HotSpot_tv.jpeg', width = 30, height = 15, units='cm', dpi=300)
 
 
-
+ggpubr::ggarrange(pr1,pr2, pr3, nrow=1, labels=c('a) R1: 2007-2012', 'b) R2: 2019-2019', 'c) R2 - R1'))
 
 

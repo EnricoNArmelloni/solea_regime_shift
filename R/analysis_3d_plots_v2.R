@@ -575,7 +575,7 @@ t1=test%>%
 
 pm1=ggplot()+
   geom_sf(data=t1, aes(fill=log(Regime1+1)), color=NA)+
-  geom_sf(data=closure3, fill=NA)+
+  geom_sf(data=closure3, fill=NA, color='red')+
   scale+
   ggtitle('Regime 1')+
   labs(fill='log recruits (n/km2)')+
@@ -586,7 +586,7 @@ pm1=ggplot()+
 
 pm2=ggplot(data=t1)+
   geom_sf(aes(fill=log(Regime2+1)), color=NA)+
-  geom_sf(data=closure6, fill=NA)+
+  geom_sf(data=closure6, fill=NA, color='red')+
   scale+
   ggtitle('Regime 2')+
   labs(fill='log recruits (n/km2)')+
@@ -600,7 +600,7 @@ pm3=ggplot()+
           aes(fill=log(diff+1)))+
   scale+
   labs(fill='R2 - R1')+
-  geom_sf(data=closure6, fill=NA)+
+  geom_sf(data=closure6, fill=NA, color='red')+
   ggtitle('Regime 2 - Regime 1')+
   labs(fill='log recruits (n/km2)')+
   theme(panel.background = element_rect(fill='white'))+
@@ -610,5 +610,5 @@ pm3=ggplot()+
 
 pr4=ggpubr::ggarrange(pm1,pm2, pm3, nrow=1, common.legend = T)
 
-
+ggsave(plot=pr4, 'results/analysis_3d/plots/fig4.jpeg', width = 20, height = 10, units='cm')
 

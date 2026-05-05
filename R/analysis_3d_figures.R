@@ -589,7 +589,7 @@ p3=ggplot()+
   annotation_scale()+
   scale_fill_viridis(limits = range_vals)
 
-pcomb=ggpubr::ggarrange(p1,p2,p3, common.legend = T, nrow=1)
+pcomb=ggpubr::ggarrange(p1,p2,p3, common.legend = T, nrow=1, labels=c('a)','b)','c)'))
 
 ggsave(plot=pcomb, 'C:/github/solea_regime_shift/results/analysis_3d/plots/Fig4.jpeg', width = 20, height = 10, units='cm', dpi=500)
 

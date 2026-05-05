@@ -4,7 +4,7 @@ scriptDir <- dirname(scriptPath)
 setwd(file.path(scriptDir, '..'))
 library(tidyverse)
 library(sf)
-library(sdmTMB) # ‘0.6.0’
+library(sdmTMB) # ???0.6.0???
 library(spdep)
 library(visreg)
 
@@ -61,9 +61,9 @@ p.tem$pred_se=pa.tv.model$family$linkinv(p.tem$est_se)
 
 
 ppa1=ggplot(p.dep, aes(depth, pred,
-              # ymin = exp(est - 1.96 * est_se),
-              # ymax = exp(est + 1.96 * est_se),
-              group = as.factor(year))) +
+                       # ymin = exp(est - 1.96 * est_se),
+                       # ymax = exp(est + 1.96 * est_se),
+                       group = as.factor(year))) +
   geom_line(aes(colour = year, linetype=factor(r.s)), lwd = 1) +
   #geom_ribbon(aes(fill = year), alpha = 0.1) +
   scale_colour_viridis_c() +
@@ -73,9 +73,9 @@ ppa1=ggplot(p.dep, aes(depth, pred,
   labs(x = "Depth", y = "Conditional effect on P/A")
 
 ppa2=ggplot(p.sal, aes(salinity, pred,
-                   ymin = (pred -  pred_se/2),
-                   ymax = (pred +  pred_se/2),
-                  group = as.factor(year))) +
+                       ymin = (pred -  pred_se/2),
+                       ymax = (pred +  pred_se/2),
+                       group = as.factor(year))) +
   geom_line() +
   geom_ribbon( alpha = 0.1) +
   scale_colour_viridis_c() +
@@ -84,9 +84,9 @@ ppa2=ggplot(p.sal, aes(salinity, pred,
   labs(x = "Salinity", y = "Conditional effect on P/A")
 
 ppa3=ggplot(p.tem, aes(temperature, pred,
-                  ymin = (pred -  pred_se/2),
-                  ymax = (pred +  pred_se/2),
-                  group = as.factor(year))) +
+                       ymin = (pred -  pred_se/2),
+                       ymax = (pred +  pred_se/2),
+                       group = as.factor(year))) +
   geom_line() +
   geom_ribbon( alpha = 0.1) +
   scale_colour_viridis_c() +
@@ -133,9 +133,9 @@ pos.sal$pred=pos.tv.model$family$linkinv(pos.sal$est)
 pos.sal$pred_se=pos.tv.model$family$linkinv(pos.sal$est_se)
 
 ppos1=ggplot(pos.tem, aes(temperature, pred,
-                  # ymin = exp(est - 1.96 * est_se),
-                  # ymax = exp(est + 1.96 * est_se),
-                  group = as.factor(year))) +
+                          # ymin = exp(est - 1.96 * est_se),
+                          # ymax = exp(est + 1.96 * est_se),
+                          group = as.factor(year))) +
   geom_line(aes(colour = year, linetype=factor(r.s)), lwd = 1) +
   #geom_ribbon(aes(fill = year), alpha = 0.1) +
   labs(linetype='Regime', colour='Year')+
@@ -147,7 +147,7 @@ ppos1=ggplot(pos.tem, aes(temperature, pred,
 ppos2=ggplot(pos.dep, aes(depth, pred,
                           ymin = (pred -  pred_se/2),
                           ymax = (pred +  pred_se/2),
-                    group = as.factor(year))) +
+                          group = as.factor(year))) +
   geom_line() +
   geom_ribbon(alpha = 0.1) +
   scale_colour_viridis_c() +
@@ -158,7 +158,7 @@ ppos2=ggplot(pos.dep, aes(depth, pred,
 ppos3=ggplot(pos.sal, aes(salinity, pred,
                           ymin = (pred -  pred_se/2),
                           ymax = (pred +  pred_se/2),
-                    group = as.factor(year))) +
+                          group = as.factor(year))) +
   geom_line() +
   geom_ribbon( alpha = 0.1) +
   scale_colour_viridis_c() +
@@ -442,28 +442,11 @@ ggsave(plot=p5, 'results/analysis_3d/plots/residuals_tv.png', width=15, height=1
 
 caret::confusionMatrix(table(x.dat.m$pred, x.dat.m$pa))
 
-
-# spatial preds ####
-library(rnaturalearth)
-library(sf)
-library(ggspatial)
-
-gsas=read_sf("C:/Users/e.armelloni/OneDrive/Lezioni/Lavoro/BigData/gsa/GSAs_simplified")%>%
-  st_set_crs(4326)%>%
-  st_transform(., 3003)
-gsa=gsas[gsas$SMU_CODE %in%c(17),]
-
-closure3=st_buffer(gsa, -3*1000*1.852)
-
-
-solemon.area=read_sf('C:/Users/e.armelloni/OneDrive/Lezioni/Lavoro/Solemon/Data/shapefiles/Solemon_strata_ITA_SVN_depth')%>%
-#solemon.area=read_sf('../other_data/Solemon_strata_ITA_SVN_depth')%>%
+## Spatial predictions ####
+solemon.area=read_sf('../other_data/Solemon_strata_ITA_SVN_depth')%>%
   st_union()%>%
   st_set_crs(4326)%>%
   st_transform(3003)
-
-closure6=st_buffer(gsa, -6*1000*1.852)%>%
-  st_crop(solemon.area)
 
 basegrid <- readRDS("data/basegrid.RDS")
 basegrid$depth=-basegrid$depth
@@ -474,13 +457,8 @@ basegrid$fyear=as.factor(basegrid$year)
 basegrid$ppr.sum=(basegrid$pp_summer-mean(xdat$pp_summer))/sd(xdat$pp_summer)
 basegrid$sal.sum=(basegrid$sal_summer-mean(xdat$sal_summer))/sd(xdat$sal_summer)
 
-med=read_sf("C:/Users/e.armelloni/OneDrive/Lezioni/Lavoro/BigData/contours/Med_Poly")%>%
-  #med=read_sf("../other_data/Med_Poly")%>%
-  st_set_crs(4326)%>%
-  st_transform(., 3003)%>%
-  st_crop(.,st_buffer(basegrid, 20000))
-
 coords.grid=as.data.frame(st_coordinates(st_centroid(basegrid)))
+
 pred.grid=as.data.frame(basegrid)%>%
   dplyr::select(year, fyear,dep, sal.fal, tem.fal, FID)
 pred.grid$Xkm=coords.grid$X/1000
@@ -504,10 +482,12 @@ pred.grid=pred.grid[,c('year', 'FID','pred.pos')]
 basegrid=left_join(basegrid, pred.grid, by=c('year','FID'))
 basegrid$index=(basegrid$pred.pos)*(basegrid$pred)
 
+#basegrid$index.tv=(basegrid$pred.pos)*basegrid$pred.tv
+
+#saveRDS(basegrid, 'results/grid_pos.RDS')
 thr.out=as.numeric(quantile(basegrid$index, probs=0.999))
 
-base.stats=basegrid%>%
-  dplyr::group_by(year)%>%
+base.stats=basegrid%>%dplyr::group_by(year)%>%
   dplyr::summarise(pa=mean(pred),pa.var=sd(pred), pos=mean(pred.pos), pos.var=sd(pred.pos))
 
 ppasp=ggplot(data=base.stats)+
@@ -536,9 +516,9 @@ pl.yr=ggplot(data=basegrid)+
 
 ggsave(plot=pl.yr, 'results/analysis_3d/plots/spatialyr_tv.jpeg', width = 20, height = 30, units='cm')
 
-thr=as.numeric(quantile(basegrid$index, probs=0.95))
 
-test=as.data.frame(basegrid)%>%
+### Figure 4
+fig4.df=as.data.frame(basegrid)%>%
   #dplyr::filter(index<thr.out)%>%
   #dplyr::filter(index>thr)%>%
   dplyr::select(year,FID,index)%>%
@@ -552,63 +532,65 @@ test=as.data.frame(basegrid)%>%
   dplyr::mutate(diff=log(Regime2+1)-log(Regime1+1))%>%
   dplyr::left_join(basegrid)%>%
   st_as_sf()
+saveRDS(fig4.df, 'results/spatial_predictions.RDS')
 
-saveRDS(test, 'results/spatial_predictions.RDS')
 
-closure6=st_buffer(gsa, -6*1000*1.852)%>%
-  st_intersection(basegrid)%>%
-  st_union()
-
-closure3=st_buffer(gsa, -3*1000*1.852)%>%
-  st_intersection(basegrid)%>%
-  st_union()
-
-lims <- range(seq(0,5,0.1), na.rm = TRUE)
-scale <- scale_fill_viridis_c(limits = lims)
-
-t1=test%>%
+spat.df=fig4.df%>%
   dplyr::group_by(x)%>%
-  dplyr::summarise(Regime1=mean(Regime1),
-                   Regime2=mean(Regime2))%>%
-  dplyr::mutate(diff=Regime2-Regime1)
+  dplyr::summarise(Regime1=mean(Regime1), Regime2=mean(Regime2))%>%
+  dplyr::mutate(Diff=Regime2-Regime1)
+spat.smooth=st_intersection(spat.df, solemon.area)
+
+countries=ne_countries(continent='europe', scale=10)%>%
+  st_set_crs(4326)%>%
+  st_transform(3003)%>%
+  st_crop(st_buffer(spat.df, 20*1000))
+
+ita=ne_countries(country='italy', scale=10)%>%
+  st_set_crs(4326)%>%
+  st_transform(3003)%>%
+  st_crop(st_buffer(spat.df,15000))
+
+closure3=st_buffer(ita, 3*1852)%>%
+  st_difference(ita)%>%
+  st_crop(solemon.area)
+
+closure6=st_buffer(ita, 6*1852)%>%
+  st_difference(ita)%>%
+  st_crop(solemon.area)
+
+range_vals <- range(log(c(spat.smooth$Regime1, spat.smooth$Regime2)+1), na.rm = TRUE)
 
 
-pm1=ggplot()+
-  geom_sf(data=t1, aes(fill=log(Regime1+1)), color=NA)+
+p1=ggplot()+
+  geom_sf(data=spat.smooth, aes(fill=log(Regime1+1)), color=NA)+
   geom_sf(data=closure3, fill=NA, color='red')+
-  scale+
-  ggtitle('Regime 1')+
-  labs(fill='log recruits (n/km2)')+
-  theme(panel.background = element_rect(fill='white'))+
-  theme(legend.position = 'bottom')+
-  geom_sf(data=med, fill='gray50')+
-  annotation_scale()  ;pm1
+  geom_sf(data=countries, fill='grey50')+
+  labs(fill='log juveniles density (n/km2)')+
+  theme(panel.border = element_blank(), panel.grid.major = element_blank())+
+  annotation_scale()+
+  scale_fill_viridis(limits = range_vals)
 
-pm2=ggplot(data=t1)+
-  geom_sf(aes(fill=log(Regime2+1)), color=NA)+
+p2=ggplot()+
+  geom_sf(data=spat.smooth, aes(fill=log(Regime2+1)), color=NA)+
   geom_sf(data=closure6, fill=NA, color='red')+
-  scale+
-  ggtitle('Regime 2')+
-  labs(fill='log recruits (n/km2)')+
-  theme(panel.background = element_rect(fill='white'))+
-  theme(legend.position = 'bottom')+
-  geom_sf(data=med, fill='gray50')+
-  annotation_scale();pm2
+  geom_sf(data=countries, fill='grey50')+
+  labs(fill='log juveniles')+
+  theme(panel.border = element_blank(), panel.grid.major = element_blank())+
+  annotation_scale()+
+  scale_fill_viridis(limits = range_vals)
 
-pm3=ggplot()+
-  geom_sf(data=t1, color=NA,
-          aes(fill=log(diff+1)))+
-  scale+
-  labs(fill='R2 - R1')+
+p3=ggplot()+
+  geom_sf(data=spat.smooth, aes(fill=log(Diff+1)), color=NA)+
   geom_sf(data=closure6, fill=NA, color='red')+
-  ggtitle('Regime 2 - Regime 1')+
-  labs(fill='log recruits (n/km2)')+
-  theme(panel.background = element_rect(fill='white'))+
-  theme(legend.position = 'bottom')+
-  geom_sf(data=med, fill='gray50')+
-  annotation_scale();pm3
+  geom_sf(data=countries, fill='grey50')+
+  labs(fill='log juveniles')+
+  theme(panel.border = element_blank(), panel.grid.major = element_blank())+
+  annotation_scale()+
+  scale_fill_viridis(limits = range_vals)
 
-pr4=ggpubr::ggarrange(pm1,pm2, pm3, nrow=1, common.legend = T)
+pcomb=ggpubr::ggarrange(p1,p2,p3, common.legend = T, nrow=1)
 
-ggsave(plot=pr4, 'results/analysis_3d/plots/fig4.jpeg', width = 20, height = 10, units='cm')
+ggsave(plot=pcomb, 'C:/github/solea_regime_shift/results/analysis_3d/plots/Fig4.jpeg', width = 20, height = 10, units='cm', dpi=500)
+
 

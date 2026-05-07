@@ -7,7 +7,7 @@ library(sf)
 library(sdmTMB) # ???0.6.0???
 library(spdep)
 library(visreg)
-
+library(viridis)
 
 
 # Table of model selection ####
@@ -507,17 +507,11 @@ ppossp=ggplot(data=base.stats)+
 pcomb=ggpubr::ggarrange(ppa1,ppa2,ppa3,ppasp,ppos2,ppos3, ppos1,ppossp, nrow=2, ncol=4 ,common.legend = T)
 ggsave(plot=pcomb,'results/analysis_3d/plots/conditional_effects_tv.jpeg', width = 25, height = 15, units='cm')
 
-pl.yr=ggplot(data=basegrid)+
-  geom_sf(data=solemon.area, fill='white')+
-  geom_sf(aes(fill=index), color=NA)+
-  facet_wrap(~year)+
-  scale_fill_viridis_c()+
-  geom_sf(data=med)
-
-ggsave(plot=pl.yr, 'results/analysis_3d/plots/spatialyr_tv.jpeg', width = 20, height = 30, units='cm')
 
 
 ### Figure 4
+library(rnaturalearth)
+library(ggspatial)
 fig4.df=as.data.frame(basegrid)%>%
   #dplyr::filter(index<thr.out)%>%
   #dplyr::filter(index>thr)%>%
@@ -525,7 +519,7 @@ fig4.df=as.data.frame(basegrid)%>%
   pivot_wider(names_from = year, values_from = index)%>%
   replace(is.na(.),0)%>%
   pivot_longer(-c(FID), names_to = 'year', values_to = 'index')%>%
-  dplyr::mutate(regime=ifelse(year<2011, 'Regime1','Regime2'))%>%
+  dplyr::mutate(regime=ifelse(year<=2012, 'Regime1','Regime2'))%>%
   dplyr::group_by(FID, regime)%>%
   dplyr::summarise(index=mean(index))%>%
   pivot_wider(names_from = regime, values_from = index)%>%
@@ -551,7 +545,7 @@ ita=ne_countries(country='italy', scale=10)%>%
   st_transform(3003)%>%
   st_crop(st_buffer(spat.df,15000))
 
-closure3=st_buffer(ita, 3*1852)%>%
+closure3=st_buffer(ita, 4*1852)%>%
   st_difference(ita)%>%
   st_crop(solemon.area)
 
@@ -561,12 +555,12 @@ closure6=st_buffer(ita, 6*1852)%>%
 
 range_vals <- range(log(c(spat.smooth$Regime1, spat.smooth$Regime2)+1), na.rm = TRUE)
 
-
+set_theme(theme_bw())
 p1=ggplot()+
   geom_sf(data=spat.smooth, aes(fill=log(Regime1+1)), color=NA)+
   geom_sf(data=closure3, fill=NA, color='red')+
   geom_sf(data=countries, fill='grey50')+
-  labs(fill='log juveniles density (n/km2)')+
+  labs(fill='Common sole juveniles (< 20 cm TL): log abundance (n/km2)')+
   theme(panel.border = element_blank(), panel.grid.major = element_blank())+
   annotation_scale()+
   scale_fill_viridis(limits = range_vals)
@@ -592,5 +586,19 @@ p3=ggplot()+
 pcomb=ggpubr::ggarrange(p1,p2,p3, common.legend = T, nrow=1, labels=c('a)','b)','c)'))
 
 ggsave(plot=pcomb, 'C:/github/solea_regime_shift/results/analysis_3d/plots/Fig4.jpeg', width = 20, height = 10, units='cm', dpi=500)
+
+## annual plots
+
+pl.yr=ggplot()+
+  geom_sf(data=basegrid, aes(fill=log(index+1)), color=NA)+
+  geom_sf(data=countries, fill='grey50')+
+  labs(fill=' juvenile log abundance')+
+  theme(panel.border = element_blank(), panel.grid.major = element_blank(), legend.position = 'bottom')+
+  annotation_scale()+
+  scale_fill_viridis(limits = range_vals)+
+  facet_wrap(~year)
+
+ggsave(plot=pl.yr, 'results/analysis_3d/plots/spatialyr_tv.jpeg', width = 20, height = 30, units='cm')
+
 
 
